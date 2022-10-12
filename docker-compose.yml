@@ -1,0 +1,35 @@
+version: '3.8'
+
+services: 
+  mysql:
+    image: mysql:8-debian
+    restart: always
+    env_file:
+      - ./.db.env
+    ports:
+      - 3306:3306
+      - 33060:33060
+    volumes:
+      - db:/var/lib/mysql
+    networks:
+      - public
+  
+  admin:
+    image: adminer
+    restart: always
+    depends_on:
+      - mysql
+    environment:
+      - ADMINER_DEFAULT_SERVER=mysql
+      - ADMINER_DESIGN=galkaev
+    ports:
+      - 8080:8080
+    networks:
+      - public
+
+networks:
+  public:
+    driver: bridge
+
+volumes:
+  db:
