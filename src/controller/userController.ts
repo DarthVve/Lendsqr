@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
-import { userSchema, generateToken, options } from '../utility/utils';
+import { userSchema, loginSchema, generateToken, options } from '../utility/utils';
 import bcrypt from 'bcryptjs';
 import { knex } from '../db/knex';
 
 //User Sign up
-export async function registerUser(req: Request, res: Response) {
+export async function createAccount(req: Request, res: Response) {
   try {
     const validationResult = userSchema.validate(req.body, options);
 
@@ -12,9 +12,9 @@ export async function registerUser(req: Request, res: Response) {
       return res.status(400).json({ msg: validationResult.error.details[0].message });
     }
 
-    const duplicate = await knex('users').where('email', req.body.email).first();
+    const duplicateUser = await knex('users').where('email', req.body.email).orWhere('username', req.body.username).orWhere('phonenumber', req.body.phonenumber).first();
 
-    if (duplicate) {
+    if (duplicateUser) {
       return res.status(409).json({ msg: 'Enter a unique username, email, or phonenumber' });
     }
 
@@ -30,11 +30,54 @@ export async function registerUser(req: Request, res: Response) {
 
     if (user) {
       return res.status(201).json({
-        msg: `User created successfully, welcome ${req.body.username}`,
+        msg: `User account created successfully, welcome ${req.body.username}`,
       });
     }
   } catch (err) {
     console.error(err)
-    res.status(500).json({ msg: 'failed to register', route: '/user/register' });
+    res.status(500).json({ msg: 'failed to create an account', route: '/users/create' });
+  }
+};
+
+//User Log In
+export async function loginUser(req: Request, res: Response) {
+  try {
+    const validationResult = loginSchema.validate(req.body, options);
+    if (validationResult.error) {
+      return res.status(400).json({ msg: validationResult.error.details[0].message });
+    }
+
+    const user = await knex('users').where('email', req.body.emailOrUsername).orWhere('username', req.body.emailOrUsername).first();
+
+    if (!user) { return res.status(404).json({ msg: 'User not found' }) };
+
+    const isMatch = await bcrypt.compare(req.body.password, user.password);
+    if (isMatch) {
+      const id = user.id;
+      const firstname = user.firstname;
+      const lastname = user.lastname;
+      const username = user.username;
+      const email = user.email;
+      const phonenumber = user.phonenumber;
+      const wallet = user.wallet;
+      const userInfo = { id, firstname, lastname, username, email, phonenumber, wallet };
+      const token = generateToken({ id }) as string;
+      const production = process.env.NODE_ENV === "production";
+
+      return res.status(200).cookie("token", token, {
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+        httpOnly: true,
+        secure: production,
+        sameSite: production ? "none" : "lax"
+      }).json({
+        msg: 'You have successfully logged in',
+        userInfo
+      });
+    } else {
+      return res.status(400).json({ msg: 'Invalid credentials' });
+    }
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ msg: 'failed to authenticate', route: '/users/login' });
   }
 };
