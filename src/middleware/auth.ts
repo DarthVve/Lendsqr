@@ -18,7 +18,7 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
     }
 
     const { id } = verified as { [key: string]: string };
-    const user = await knex('users').where('email', req.body.email).first()
+    const user = await knex('users').where('id', id).first()
     if (!user) {
       return res.status(401).json({ msg: "User could not be identified" });
     }

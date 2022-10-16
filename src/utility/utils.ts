@@ -29,8 +29,20 @@ export const loginSchema = Joi.object().keys({
 });
 
 
+//Deposit Schema
+export const depositSchema = Joi.object().keys({
+  amount: Joi.number().required(),
+  email: Joi.string().trim().lowercase().required(),
+  code: Joi.string().required(),
+  account_number: Joi.string().required(),
+  phone_number: Joi.string().regex(/^[0-9]{11}/)
+});
+
 //Token Generator function for login sessions
 export const generateToken = (user: { [key: string]: unknown }, time: string = '7d'): unknown => {
   const pass = process.env.JWT_SECRET as string;
   return jwt.sign(user, pass, { expiresIn: time });
 };
+
+//Money conversion function
+export const moneyConverter = (num: number): string => String(num * 100);

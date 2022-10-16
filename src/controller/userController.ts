@@ -40,7 +40,7 @@ export async function createAccount(req: Request, res: Response) {
 };
 
 //User Log In
-export async function loginUser(req: Request, res: Response) {
+export async function logIntoAccount(req: Request, res: Response) {
   try {
     const validationResult = loginSchema.validate(req.body, options);
     if (validationResult.error) {
@@ -54,13 +54,12 @@ export async function loginUser(req: Request, res: Response) {
     const isMatch = await bcrypt.compare(req.body.password, user.password);
     if (isMatch) {
       const id = user.id;
-      const firstname = user.firstname;
-      const lastname = user.lastname;
+      const fullname = user.fullname;
       const username = user.username;
       const email = user.email;
       const phonenumber = user.phonenumber;
       const wallet = user.wallet;
-      const userInfo = { id, firstname, lastname, username, email, phonenumber, wallet };
+      const userInfo = { id, fullname, username, email, phonenumber, wallet };
       const token = generateToken({ id }) as string;
       const production = process.env.NODE_ENV === "production";
 
