@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { userSchema, loginSchema, generateToken, options } from '../utility/utils';
 import bcrypt from 'bcryptjs';
 import { knex } from '../db/knex';
+import axios from 'axios';
 
 //User Sign up
 export async function createAccount(req: Request, res: Response) {
@@ -40,7 +41,7 @@ export async function createAccount(req: Request, res: Response) {
 };
 
 //User Log In
-export async function loginUser(req: Request, res: Response) {
+export async function logIntoAccount(req: Request, res: Response) {
   try {
     const validationResult = loginSchema.validate(req.body, options);
     if (validationResult.error) {
@@ -79,5 +80,40 @@ export async function loginUser(req: Request, res: Response) {
   } catch (err) {
     console.error(err)
     res.status(500).json({ msg: 'failed to authenticate', route: '/users/login' });
+  }
+};
+
+
+//Generates a payment link used to charge user allowing them fund their account
+export async function paymentLink(res: Response) {
+  try {
+    const response = await axios.post("https://api.flutterwave.com/v3/payments", {
+      headers: {
+        Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`
+      },
+      json: {
+        tx_ref: "hooli-tx-1920bbtytty",
+        amount: "100",
+        currency: "NGN",
+        redirect_url: "https://webhook.site/9d0b00ba-9a69-44fa-a43d-a82c33c36fdc",
+        meta: {
+          consumer_id: 23,
+          consumer_mac: "92a3-912ba-1192a"
+        },
+        customer: {
+          email: "user@gmail.com",
+          phonenumber: "080****4528",
+          name: "Yemi Desola"
+        },
+        customizations: {
+          title: "Pied Piper Payments",
+          logo: "http://www.piedpiper.com/app/themes/joystick-v27/images/logo.png"
+        }
+      }
+    });
+
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ msg: 'failed to generate payment link', route: '/users/fund' });
   }
 };

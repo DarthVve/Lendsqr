@@ -8,7 +8,7 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
   try {
     const authorization = req.headers.authorization;
     if (!authorization && !req.cookies.token) {
-      return res.status(401).json({ msg: "Authentication required. Please login" })
+      return res.status(401).json({ msg: "Authentication required. Please login" });
     }
 
     const token = authorization?.slice(7) || req.cookies.token as string;
@@ -18,7 +18,7 @@ export async function auth(req: Request, res: Response, next: NextFunction) {
     }
 
     const { id } = verified as { [key: string]: string };
-    const user = await knex('users').where('email', req.body.email).first()
+    const user = await knex('users').where('id', id).first()
     if (!user) {
       return res.status(401).json({ msg: "User could not be identified" });
     }
