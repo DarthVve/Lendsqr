@@ -22,12 +22,17 @@ export const userSchema = Joi.object().keys({
   confirm_password: Joi.ref('password')
 }).with('password', 'confirm_password');
 
-//USer Log In Schema
+//User Log In Schema
 export const loginSchema = Joi.object().keys({
   emailOrUsername: Joi.string().trim().required(),
   password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required()
 });
 
+
+//User Deposit Schema
+export const depositSchema = Joi.object().keys({
+  amount: Joi.string().required()
+});
 
 //Token Generator function for login sessions
 export const generateToken = (user: { [key: string]: unknown }, time: string = '7d'): unknown => {

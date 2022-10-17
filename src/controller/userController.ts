@@ -3,6 +3,7 @@ import { userSchema, loginSchema, generateToken, options } from '../utility/util
 import bcrypt from 'bcryptjs';
 import { knex } from '../db/knex';
 import axios from 'axios';
+import { v4 as uuidv4 } from 'uuid';
 
 //User Sign up
 export async function createAccount(req: Request, res: Response) {
@@ -40,6 +41,7 @@ export async function createAccount(req: Request, res: Response) {
   }
 };
 
+
 //User Log In
 export async function logIntoAccount(req: Request, res: Response) {
   try {
@@ -55,13 +57,12 @@ export async function logIntoAccount(req: Request, res: Response) {
     const isMatch = await bcrypt.compare(req.body.password, user.password);
     if (isMatch) {
       const id = user.id;
-      const firstname = user.firstname;
-      const lastname = user.lastname;
+      const fullname = user.fullname;
       const username = user.username;
       const email = user.email;
       const phonenumber = user.phonenumber;
       const wallet = user.wallet;
-      const userInfo = { id, firstname, lastname, username, email, phonenumber, wallet };
+      const userInfo = { id, fullname, username, email, phonenumber, wallet };
       const token = generateToken({ id }) as string;
       const production = process.env.NODE_ENV === "production";
 
@@ -85,32 +86,40 @@ export async function logIntoAccount(req: Request, res: Response) {
 
 
 //Generates a payment link used to charge user allowing them fund their account
-export async function paymentLink(res: Response) {
+export async function paymentLink(req: Request, res: Response) {
   try {
+    const id = req.user;
+    const user = await knex('users').where('id', id).first();
+    const { amount } = req.body;
+    const ref = uuidv4();
+
     const response = await axios.post("https://api.flutterwave.com/v3/payments", {
       headers: {
         Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`
       },
       json: {
-        tx_ref: "hooli-tx-1920bbtytty",
-        amount: "100",
+        tx_ref: ref,
+        amount: amount,
         currency: "NGN",
-        redirect_url: "https://webhook.site/9d0b00ba-9a69-44fa-a43d-a82c33c36fdc",
-        meta: {
-          consumer_id: 23,
-          consumer_mac: "92a3-912ba-1192a"
-        },
+        redirect_url: `${process.env.ROOT_URL}/funds/deposit`,
         customer: {
-          email: "user@gmail.com",
-          phonenumber: "080****4528",
-          name: "Yemi Desola"
+          email: user.email,
+          phonenumber: user.phonenumber,
+          name: user.fullname
         },
         customizations: {
-          title: "Pied Piper Payments",
-          logo: "http://www.piedpiper.com/app/themes/joystick-v27/images/logo.png"
+          title: "Tech Vault"
         }
       }
     });
+
+    console.log(response);
+
+    if (response.data.status === 'success') {
+      return res.status(201).redirect(response.data.data.link);
+    } else {
+      return res.status(501).json({ msg: "Payment Gateway is having some down time, please bear with us" });
+    }
 
   } catch (err) {
     console.error(err)
