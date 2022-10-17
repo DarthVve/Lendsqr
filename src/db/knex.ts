@@ -22,17 +22,44 @@ async function DB() {
           table.integer('wallet');
           table.string('password');
         })
-      // .createTable('accounts', (table: { increments: (arg0: string) => void; string: (arg0: string) => void; integer: (arg0: string) => { (): any; new(): any; unsigned: { (): { (): any; new(): any; references: { (arg0: string): void; new(): any; }; }; new(): any; }; }; }) => {
-      //   table.increments('id');
-      //   table.string('bank_code');
-      //   table.string('bank_name');
-      //   table.string('account_name');
-      //   table.string('account_number');
-      //   table
-      //     .integer('user_id')
-      //     .unsigned()
-      //     .references('users.id');
-      // })
+        .createTable('deposits', (table: { increments: (arg0: string) => void; string: (arg0: string) => void; integer: (arg0: string) => { (): any; new(): any; unsigned: { (): { (): any; new(): any; references: { (arg0: string): void; new(): any; }; }; new(): any; }; }; }) => {
+          table.increments('id');
+          table.string('reference');
+          table.string('amount');
+          table.string('currency');
+          table.string('status');
+          table
+            .integer('user_id')
+            .unsigned()
+            .references('users.id');
+        })
+        .createTable('transfers', (table: { increments: (arg0: string) => void; string: (arg0: string) => void; integer: (arg0: string) => { (): any; new(): any; unsigned: { (): { (): any; new(): any; references: { (arg0: string): void; new(): any; }; }; new(): any; }; }; }) => {
+          table.increments('id');
+          table.string('reference');
+          table.string('amount');
+          table.string('recipient');
+          table.string('recipient_email');
+          table.string('recipient_phone');
+          table.string('status');
+          table
+            .integer('user_id')
+            .unsigned()
+            .references('users.id');
+        })
+        .createTable('withdrawals', (table: { increments: (arg0: string) => void; string: (arg0: string) => void; integer: (arg0: string) => { (): any; new(): any; unsigned: { (): { (): any; new(): any; references: { (arg0: string): void; new(): any; }; }; new(): any; }; }; }) => {
+          table.increments('id');
+          table.string('reference');
+          table.string('code');
+          table.string('bank');
+          table.string('name');
+          table.string('account_number');
+          table.string('amount');
+          table.string('status');
+          table
+            .integer('user_id')
+            .unsigned()
+            .references('users.id');
+        })
     }
   });
 }
