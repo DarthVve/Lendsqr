@@ -1,8 +1,11 @@
-import { fundAccount } from '../controller/fundController';
+import { fundAccount, transferFund, withdrawal } from '../controller/fundController';
+import { auth } from '../middleware/auth';
 import express from 'express';
 const router = express.Router();
 
 /* Fund Routes */
 router.get('/deposit', fundAccount);
+router.patch('/transfer', transferFund);
+router.post('/pay', withdrawal);
 
 export default router;

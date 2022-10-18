@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { userSchema, loginSchema, generateToken, options } from '../utility/utils';
+import { userSchema, loginSchema, fundSchema, generateToken, options } from '../utility/utils';
 import bcrypt from 'bcryptjs';
 import { knex } from '../db/knex';
 import axios from 'axios';
@@ -51,7 +51,7 @@ export async function logIntoAccount(req: Request, res: Response) {
     }
 
     const user = await knex('users').where('email', req.body.emailOrUsername).orWhere('username', req.body.emailOrUsername).first();
-
+    await user.update({ username: 'Eureka' });
     if (!user) { return res.status(404).json({ msg: 'User not found' }) };
 
     const isMatch = await bcrypt.compare(req.body.password, user.password);
@@ -88,6 +88,11 @@ export async function logIntoAccount(req: Request, res: Response) {
 //Generates a payment link used to charge user allowing them fund their account
 export async function paymentLink(req: Request, res: Response) {
   try {
+    const validationResult = fundSchema.validate(req.body, options);
+    if (validationResult.error) {
+      return res.status(400).json({ msg: validationResult.error.details[0].message });
+    }
+
     const id = req.user;
     const user = await knex('users').where('id', id).first();
     const { amount } = req.body;
@@ -116,7 +121,14 @@ export async function paymentLink(req: Request, res: Response) {
     console.log(response);
 
     if (response.data.status === 'success') {
-      return res.status(201).redirect(response.data.data.link);
+      await knex('deposits').insert({
+        reference: ref,
+        amount: amount,
+        currency: 'NGN',
+        status: 'pending',
+        user_id: id
+      });
+      return res.status(202).redirect(response.data.data.link);
     } else {
       return res.status(501).json({ msg: "Payment Gateway is having some down time, please bear with us" });
     }
@@ -124,5 +136,49 @@ export async function paymentLink(req: Request, res: Response) {
   } catch (err) {
     console.error(err)
     res.status(500).json({ msg: 'failed to generate payment link', route: '/users/fund' });
+  }
+};
+
+
+//Verifies withdrawal and updates user's wallet
+export async function debitWallet(req: Request, res: Response) {
+  try {
+    const { data } = req.body;
+    const withdrawal = await knex('withdrawals').where('reference', data.id).first();
+    const user = await knex('users').where('id', withdrawal.user_id).first();
+
+    if (withdrawal.status === 'SUCCESSFUL') {
+      return res.status(200).json({ msg: 'Payment already verified' });
+    }
+
+    if (data.status === 'SUCCESSFUL') {
+      await withdrawal.update({ status: data.status });
+
+      await knex('users').where('id', withdrawal.user_id).update({
+        wallet: user.wallet - Number(data.amount)
+      });
+
+      return res.status(200).json({ msg: 'Payment verified' });
+    } else {
+      await knex('withdrawals').where('reference', data.id).update({ status: data.status });
+
+      return res.status(502).json({ msg: 'Payment gateway failed' });
+    }
+
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ msg: 'failed to verify payment', route: '/users/withdraw' });
+  }
+};
+
+
+//User Log Out
+export async function logoutUser(req: Request, res: Response, next: NextFunction) {
+  try {
+    res.clearCookie('token');
+    res.status(200).json({ msg: 'You have successfully logged out' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'failed to logout', route: '/user/logout' });
   }
 };

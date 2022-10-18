@@ -34,6 +34,29 @@ export const depositSchema = Joi.object().keys({
   amount: Joi.string().required()
 });
 
+
+//Fund User Account Schema
+export const fundSchema = Joi.object().keys({
+  amount: Joi.number().required(),
+});
+
+
+//Fund Transfer Schema
+export const transferSchema = Joi.object().keys({
+  amount: Joi.number().required(),
+  email: Joi.string().trim().lowercase().required(),
+  password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required()
+});
+
+
+//Withdrawal schema
+export const withdrawalSchema = Joi.object().keys({
+  account_number: Joi.string().length(10),
+  code: Joi.string(),
+  amount: Joi.string().required().regex(/^[0-9]{3,6}$/),
+  password: Joi.string().regex(/^[a-zA-Z0-9]{3,30}$/).required()
+});
+
 //Token Generator function for login sessions
 export const generateToken = (user: { [key: string]: unknown }, time: string = '7d'): unknown => {
   const pass = process.env.JWT_SECRET as string;
