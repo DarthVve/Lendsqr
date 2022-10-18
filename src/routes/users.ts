@@ -6,7 +6,7 @@ const router = express.Router();
 /* User Routes */
 router.post('/create', createAccount);
 router.post('/login', logIntoAccount);
-router.post('/fund', paymentLink);
+router.post('/fund', auth, paymentLink);
 router.patch('/withdraw', debitWallet);
 router.get('/logout', logoutUser);
 

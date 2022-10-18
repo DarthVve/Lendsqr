@@ -5,7 +5,7 @@ const router = express.Router();
 
 /* Fund Routes */
 router.get('/deposit', fundAccount);
-router.patch('/transfer', transferFund);
-router.post('/pay', withdrawal);
+router.patch('/transfer', auth, transferFund);
+router.post('/pay', auth, withdrawal);
 
 export default router;

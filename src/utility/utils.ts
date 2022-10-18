@@ -29,12 +29,6 @@ export const loginSchema = Joi.object().keys({
 });
 
 
-//User Deposit Schema
-export const depositSchema = Joi.object().keys({
-  amount: Joi.string().required()
-});
-
-
 //Fund User Account Schema
 export const fundSchema = Joi.object().keys({
   amount: Joi.number().required(),
