@@ -63,7 +63,7 @@ export async function transferFund(req: Request, res: Response) {
     await knex('transfers').insert({
       reference: uuidv4(),
       amount: amount,
-      recipient_id: recipient.id,
+      recipient: recipient.id,
       recipient_email: recipient.email,
       recipient_phone: recipient.phonenumber,
       status: 'sent',
@@ -123,7 +123,7 @@ export async function withdrawal(req: Request, res: Response) {
         account_number: payment.data.account_number,
         amount: payment.data.amount,
         status: payment.data.status,
-        user: user.id
+        user_id: user.id
       });
       return res.status(200).json({ msg: payment.message });
     }

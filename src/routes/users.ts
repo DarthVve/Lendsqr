@@ -7,7 +7,7 @@ const router = express.Router();
 router.post('/create', createAccount);
 router.post('/login', logIntoAccount);
 router.post('/fund', auth, paymentLink);
-router.patch('/withdraw', debitWallet);
+router.get('/withdraw', debitWallet);
 router.get('/logout', logoutUser);
 
 export default router;

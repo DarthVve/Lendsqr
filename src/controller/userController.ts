@@ -32,7 +32,7 @@ export async function createAccount(req: Request, res: Response) {
 
     if (user) {
       return res.status(201).json({
-        msg: `User account created successfully, welcome ${req.body.username}`,
+        msg: `User account created successfully. Welcome ${req.body.username}!`,
       });
     }
   } catch (err) {
@@ -51,7 +51,7 @@ export async function logIntoAccount(req: Request, res: Response) {
     }
 
     const user = await knex('users').where('email', req.body.emailOrUsername).orWhere('username', req.body.emailOrUsername).first();
-    await user.update({ username: 'Eureka' });
+
     if (!user) { return res.status(404).json({ msg: 'User not found' }) };
 
     const isMatch = await bcrypt.compare(req.body.password, user.password);
@@ -97,6 +97,8 @@ export async function paymentLink(req: Request, res: Response) {
     const user = await knex('users').where('id', id).first();
     const { amount } = req.body;
     const ref = uuidv4();
+    //console.log(process.env.FLW_SECRET_KEY)
+    console.log('yeah')
 
     const response = await axios.post("https://api.flutterwave.com/v3/payments", {
       headers: {
@@ -118,7 +120,7 @@ export async function paymentLink(req: Request, res: Response) {
       }
     });
 
-    console.log(response);
+    console.log(response, 'failed');
 
     if (response.data.status === 'success') {
       await knex('deposits').insert({
@@ -128,7 +130,7 @@ export async function paymentLink(req: Request, res: Response) {
         status: 'pending',
         user_id: id
       });
-      return res.status(202).redirect(response.data.data.link);
+      return res.status(202).json({ link: response.data.data.link }).redirect(302, response.data.data.link);
     } else {
       return res.status(501).json({ msg: "Payment Gateway is having some down time, please bear with us" });
     }
@@ -152,7 +154,7 @@ export async function debitWallet(req: Request, res: Response) {
     }
 
     if (data.status === 'SUCCESSFUL') {
-      await withdrawal.update({ status: data.status });
+      await knex('withdrawals').where('reference', data.id).update({ status: data.status });
 
       await knex('users').where('id', withdrawal.user_id).update({
         wallet: user.wallet - Number(data.amount)
