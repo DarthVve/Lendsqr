@@ -5,7 +5,6 @@
   "scripts": {
     "start": "docker compose up -d && node ./bin/www",
     "dev": "docker compose up -d && nodemon ./bin/www",
-    "prestart": "nodemon ./bin/www",
     "test": "jest",
     "tsc": "tsc -w",
     "build": "tsc",
