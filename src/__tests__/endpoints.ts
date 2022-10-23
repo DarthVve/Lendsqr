@@ -7,7 +7,6 @@ import cookieParser from 'cookie-parser';
 let cookie: string;
 let id: string;
 
-
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
@@ -176,7 +175,7 @@ describe('User Funds API Integration test', () => {
   //   }).join(";");
   // })
 
-  test('PATCH /funds/trandfer - success', async () => {
+  test('PATCH /funds/transfer - success', async () => {
     const { body, statusCode } = await request(app).get('/funds/transfer').set("Cookie", cookie).send({
       amount: 1000,
       email: "maj@gmail.com",
